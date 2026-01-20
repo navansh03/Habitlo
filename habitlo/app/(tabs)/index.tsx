@@ -14,6 +14,7 @@ type Habit = {
   id: number;
   title: string;
   streak: number;
+  lastCheckIn: string; // ISO string from Go backend
 };
 
 export default function App() {
@@ -34,6 +35,14 @@ export default function App() {
     } finally {
       setLoading(false);
     }
+  };
+  const isCheckedInToday = (lastCheckIn: string) => {
+    if (!lastCheckIn) return false;
+
+    const today = new Date().toISOString().split("T")[0];
+    const last = lastCheckIn.split("T")[0];
+
+    return today === last;
   };
 
   const addHabit = async () => {
@@ -76,30 +85,56 @@ export default function App() {
         onChangeText={setHabit}
       />
 
-      <Pressable style={styles.button} onPress={addHabit}>
+      <Pressable
+        style={[styles.button, !habit.trim() && { backgroundColor: "#8BC34A" }]}
+        onPress={addHabit}
+        disabled={!habit.trim()}
+      >
         <Text style={styles.buttonText}>Add Habit</Text>
       </Pressable>
 
-      <FlatList
-        data={habits}
-        keyExtractor={(item) => item.id.toString()}
-        contentContainerStyle={{ marginTop: 24 }}
-        renderItem={({ item }) => (
-          <View style={styles.card}>
-            <View>
-              <Text style={styles.habitTitle}>{item.title}</Text>
-              <Text style={styles.streak}>🔥 {item.streak} day streak</Text>
-            </View>
+      {habits.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>No habits yet 📝</Text>
+          <Text style={styles.emptySubText}>
+            Add your first habit to get started!
+          </Text>
+        </View>
+      ) : (
+        <FlatList
+          data={habits}
+          keyExtractor={(item) => item.id.toString()}
+          onRefresh={loadHabits}
+          refreshing={loading}
+          renderItem={({ item }) => (
+            <View style={styles.card}>
+              <View>
+                <Text style={styles.habitTitle}>{item.title}</Text>
 
-            <Pressable
-              style={styles.checkInBtn}
-              onPress={() => checkIn(item.id)}
-            >
-              <Text style={styles.checkInText}>Check In</Text>
-            </Pressable>
-          </View>
-        )}
-      />
+                {/* Last check-in label */}
+                <Text style={styles.streak}>
+                  {item.streak > 0
+                    ? `🔥 ${item.streak}-day streak`
+                    : "No streak yet"}
+                </Text>
+
+                <Text style={styles.lastCheckIn}>
+                  {isCheckedInToday(item.lastCheckIn)
+                    ? "Checked in today ✅"
+                    : "Not checked in"}
+                </Text>
+              </View>
+
+              <Pressable
+                style={styles.checkInBtn}
+                onPress={() => checkIn(item.id)}
+              >
+                <Text style={styles.checkInText}>Check In</Text>
+              </Pressable>
+            </View>
+          )}
+        />
+      )}
     </View>
   );
 }
@@ -108,26 +143,25 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 24,
-    backgroundColor: "#f9d6f9",
-    justifyContent: "center",
   },
   title: {
     fontSize: 32,
     fontWeight: "bold",
     marginBottom: 16,
     textAlign: "center",
-    color: "#333",
+    color: "#fcfcfc",
   },
   input: {
     borderWidth: 1,
     borderColor: "#ccc",
     padding: 14,
+    color: "#ffffff",
     borderRadius: 8,
     marginBottom: 12,
     fontSize: 16,
   },
   button: {
-    backgroundColor: "#4fb0c8",
+    backgroundColor: "#4CAF50",
     padding: 14,
     borderRadius: 8,
     alignItems: "center",
@@ -168,6 +202,23 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#f9d6f9",
+  },
+  emptyContainer: {
+    marginTop: 40,
+    alignItems: "center",
+  },
+  emptyText: {
+    fontSize: 20,
+    fontWeight: "600",
+    marginBottom: 6,
+  },
+  emptySubText: {
+    fontSize: 14,
+    color: "#666",
+  },
+  lastCheckIn: {
+    marginTop: 4,
+    color: "#999",
+    fontSize: 12,
   },
 });

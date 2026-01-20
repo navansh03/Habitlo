@@ -29,6 +29,7 @@ func main() {
 
 	// GET /habits
 	app.Get("/habits", func(c *fiber.Ctx) error {
+		println(habits)
 		return c.JSON(habits)
 	})
 

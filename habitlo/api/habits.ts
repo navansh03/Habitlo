@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const BASE_URL = "http://192.168.1.7:8080"; // <-- CHANGE THIS
+const BASE_URL = "http://192.168.0.198:8080"; // <-- CHANGE THIS
 
 export const getHabits = async () => {
   const res = await axios.get(`${BASE_URL}/habits`);
